@@ -10,12 +10,6 @@ __pycache__/
 dist/
 build/
 
-*.pdf
-*.html
-*.md
-*.png
-
-
 # Виртуальные окружения
 venv/
 env/
@@ -36,6 +30,12 @@ desktop.ini
 *.swo
 *~
 *.log
+
+# Игнорировать все Markdown файлы
+*.md
+
+# Игнорировать все Shell скрипты
+*.sh
 
 # Изображения и медиа файлы
 *.png
@@ -82,10 +82,12 @@ message_*.json
 log_*.json
 backup/
 test_data/
-Steganography_Practices_Report.html
+*.html
 
-# Исключения - разрешить определенные файлы для примеров
-!sample.bmp
-!photo.png
-!cover.txt
-!secret.txt
+# Generator файлы
+generate*.py
+*generator*.py
+create*.py
+copy*.py
+update*.py
+convert*.py
