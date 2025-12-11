@@ -1,0 +1,85 @@
+# Python байткод
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Виртуальные окружения
+venv/
+env/
+ENV/
+
+# IDE файлы
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Временные файлы
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.log
+
+# Изображения и медиа файлы
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+*.ico
+*.wav
+*.mp3
+*.mp4
+*.avi
+
+# Документы
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Результаты работы скриптов (сгенерированные файлы)
+*stego*.txt
+*stego*.png
+*stego*.jpg
+*stego*.bmp
+*stego*.wav
+*stego*.mp4
+*output*.png
+*output*.jpg
+*output*.bmp
+*encrypted*.png
+*recovered*.txt
+*secret_key*.txt
+*detection_report*.txt
+*analysis_result*.txt
+protection_*.json
+message_*.json
+log_*.json
+backup/
+test_data/
+Steganography_Practices_Report.html
+
+# Исключения - разрешить определенные файлы для примеров
+!sample.bmp
+!photo.png
+!cover.txt
+!secret.txt
