@@ -10,6 +10,12 @@ __pycache__/
 dist/
 build/
 
+*.pdf
+*.html
+*.md
+*.png
+
+
 # Виртуальные окружения
 venv/
 env/
