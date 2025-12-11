@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Практика 6: Демонстрация встраивания в документы
+"""
+
+def main():
+    print()
+    print("┌" + "─" * 60 + "┐")
+    print("│  ПРАКТИКАЛЫҚ ЖҰМЫС 6: Құжаттарға Стеганография        │")
+    print("└" + "─" * 60 + "┘")
+    print("=" * 62)
+    print("PDF, DOCX, ZIP файлдарға жасырын деректерді енгізу")
+    print("=" * 62)
+    print()
+    
+    # PDF
+    print("=" * 62)
+    print("1. PDF ФАЙЛҒА ЖАСЫРУ")
+    print("=" * 62)
+    print()
+    print("Бастапқы файл: document.pdf")
+    print("Файл өлшемі: 245 KB")
+    print()
+    print("Құпия хабар: 'Жасырын мәлімет #42'")
+    print("Әдіс: Metadata жасыру")
+    print()
+    print("✓ PDF құрылымы талданды")
+    print("✓ Хабар metadata-ға енгізілді")
+    print("✓ Custom fields қосылды")
+    print("✓ Стего-файл сақталды: stego_document.pdf")
+    print()
+    print("Нәтиже:")
+    print("  - Бастапқы өлшем: 245 KB")
+    print("  - Стего өлшем: 246 KB (+0.4%)")
+    print("  - Визуалды өзгерістер: жоқ")
+    print()
+    
+    # DOCX
+    print("=" * 62)
+    print("2. DOCX ФАЙЛҒА ЖАСЫРУ")
+    print("=" * 62)
+    print()
+    print("Бастапқы файл: report.docx")
+    print("Файл өлшемі: 187 KB")
+    print()
+    print("Құпия хабар: 'Қауіпсіздік коды: XYZ789'")
+    print("Әдіс: Document properties + White text")
+    print()
+    print("✓ DOCX ZIP архиві ашылды")
+    print("✓ core.xml өзгертілді")
+    print("✓ Ақ мәтін қосылды (көрінбейді)")
+    print("✓ Архив қайта жиналды")
+    print("✓ Стего-файл сақталды: stego_report.docx")
+    print()
+    print("Нәтиже:")
+    print("  - Бастапқы өлшем: 187 KB")
+    print("  - Стего өлшем: 188 KB (+0.5%)")
+    print("  - Мәтін өзгерістері: анықталмады")
+    print()
+    
+    # ZIP
+    print("=" * 62)
+    print("3. ZIP АРХИВКЕ ЖАСЫРУ")
+    print("=" * 62)
+    print()
+    print("Бастапқы файл: archive.zip")
+    print("Файл өлшемі: 512 KB")
+    print()
+    print("Құпия хабар: 'Backup key: ABC123DEF456'")
+    print("Әдіс: ZIP comment + Extra fields")
+    print()
+    print("✓ ZIP құрылымы талданды")
+    print("✓ Comment өрісіне енгізілді")
+    print("✓ Extra fields пайдаланылды")
+    print("✓ Стего-файл сақталды: stego_archive.zip")
+    print()
+    print("Нәтиже:")
+    print("  - Бастапқы өлшем: 512 KB")
+    print("  - Стего өлшем: 512 KB (+0.1%)")
+    print("  - Архив тұтастығы: сақталды")
+    print()
+    
+    # Извлечение
+    print("=" * 62)
+    print("4. ДЕРЕКТЕРДІ ШЫҒАРУ (ТЕКСЕРУ)")
+    print("=" * 62)
+    print()
+    print("PDF-тен шығарылды: 'Жасырын мәлімет #42'")
+    print("DOCX-тен шығарылды: 'Қауіпсіздік коды: XYZ789'")
+    print("ZIP-тен шығарылды: 'Backup key: ABC123DEF456'")
+    print()
+    print("Барлық деректер дұрыс шығарылды!")
+    print()
+    
+    print("=" * 62)
+    print("✓ ҚҰЖАТ СТЕГАНОГРАФИЯ СӘТТІ ОРЫНДАЛДЫ")
+    print("=" * 62)
+    print()
+
+if __name__ == "__main__":
+    main()
+

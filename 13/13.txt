@@ -1,0 +1,182 @@
+Практикалық жұмыс 13. Мультимедиялық файлдардағы ақпаратты жасырудың практикасы мен проблемалары
+
+Мақсаты
+Сурет, аудио және бейне файлдарда ақпаратты жасырудың негізгі әдістерін (LSB, DCT, аудио-стеганография, видеофреймдер) практикада көрсету.
+Жасырылған хабарды енгізу/шығару үшін қолданылатын ашық құралдар мен Python-код мысалдарын ұсыну.
+Мультимедиа стеганографиясының басты проблемаларын — тұрақтылық, сыйымдылық, анықталу қаупі, форматтық өзгерістер әсерін талдау.
+Жасырын хабарларды қауіпсіз сақтау үшін криптографиямен біріктіру және беріктік тестілеу әдістерін қарастыру.
+
+Құралдар 
+Python: pillow, stegano, opencv-python, numpy, pydub, wave, ffmpeg-python.
+Командалық құралдар: ffmpeg, steghide, OpenStego, zsteg, StegExpose, StegDetect.
+Қосымша: GIMP, Audacity (аудио өңдеу), ExifTool (метадеректер), hexedit.
+
+Қадамдық нұсқаулық (практика + код)
+Барлық мысалдар зертханалық ортада, өзіңіздің файлдарыңызда орындаңыз.
+A. Суретте LSB арқылы мәтін жасыру (Python, stegano)
+Қажетті кітапханаларды орнатыңыз:
+pip install pillow stegano
+LSB арқылы жасыру:
+from stegano import lsb
+
+# original.png — бастапқы PNG сурет (арқылы жетілдірілген биттерді өзгерту үшін lossless формат)
+secret_text = "Құпия хабар: StudentID=12345"
+secret_img = lsb.hide("original.png", secret_text)   # енгізу
+secret_img.save("hidden.png")
+print("Жасырын сурет saved: hidden.png")
+Шығару:
+from stegano import lsb
+msg = lsb.reveal("hidden.png")
+print("Шығарылды:", msg)
+Ескерту: бұл әдіс PNG және BMP сияқты lossless форматтарға жарайды; JPEG-қа енгізсеңіз, сығу барысында жоғалады.
+
+B. Суретте LSB + AES (криптостеганография)
+pycryptodome орнатыңыз:
+pip install pycryptodome
+Жіберерден бұрын шифрлау, кейін енгізу:
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+import base64
+from stegano import lsb
+
+key = get_random_bytes(16)   # 16 байт — AES-128 (оқу үшін сақтаңыз)
+cipher = AES.new(key, AES.MODE_EAX)
+plaintext = b"Сырлы хабар"
+nonce = cipher.nonce
+ciphertext, tag = cipher.encrypt_and_digest(plaintext)
+payload = base64.b64encode(nonce + ciphertext).decode()
+
+secret_img = lsb.hide("original.png", payload)
+secret_img.save("hidden_enc.png")
+print("Шифрланған және жасырыңқ енгізілді.")
+Шығару + дешифрлеу:
+from Crypto.Cipher import AES
+import base64
+from stegano import lsb
+
+payload = lsb.reveal("hidden_enc.png")
+data = base64.b64decode(payload)
+nonce = data[:16]
+ciphertext = data[16:]
+
+cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+plaintext = cipher.decrypt(ciphertext)
+print("Дешифрленген:", plaintext.decode())
+Ескерту: кілтті қауіпсіз сақтау — басты міндет.
+
+C. JPEG-қа DCT-негізделген енгізу (steghide)
+steghide — JPEG/ BMP / WAV т.с.с-қа енгізуге жарайтын CLI құрал (Linux/Windows):
+Орнату (Debian/Ubuntu мысалы):
+sudo apt install steghide
+Суретке енгізу:
+steghide embed -cf cover.jpg -ef secret.txt -p yourpassword
+# -cf : cover file, -ef : embedded file, -p : пароль
+Шығарып алу:
+steghide extract -sf cover.jpg -p yourpassword
+Ескерту: steghide JPEG-тағы DCT-ке негізделген әрекеттерді орындайды және JPEG қайтасығу кезінде аздап берік болады — бірақ әрқашан қауіпсіз емес.
+
+D. Аудио (WAV) — LSB енгізу және шығару (Python)
+pydub орнату:
+pip install pydub
+(Сонымен қатар ffmpeg керек)
+қарапайым LSB енгізу/шығару (мысал, 16-bit WAV):
+import wave
+import numpy as np
+
+def hide_in_wav(cover_wav, out_wav, secret_message):
+    # ашу
+    wf = wave.open(cover_wav, 'rb')
+    params = wf.getparams()
+    frames = wf.readframes(wf.getnframes())
+    samples = np.frombuffer(frames, dtype=np.int16)
+    wf.close()
+    # хабар биттер
+    bits = ''.join(format(b, '08b') for b in secret_message.encode('utf-8')) + '00000000'  # терминатор
+    if len(bits) > len(samples):
+        raise ValueError("Сыйымдылық жетпейді")
+    # LSB алмастыру
+    for i, bit in enumerate(bits):
+        samples[i] = (samples[i] & ~1) | int(bit)
+    samples.tofile('tmp.raw')
+    # қайта жазу
+    out = wave.open(out_wav, 'wb')
+    out.setparams(params)
+    out.writeframes(samples.tobytes())
+    out.close()
+
+def reveal_from_wav(stego_wav):
+    wf = wave.open(stego_wav, 'rb')
+    frames = wf.readframes(wf.getnframes())
+    samples = np.frombuffer(frames, dtype=np.int16)
+    bits = ''.join(str(samples[i] & 1) for i in range(len(samples)))
+    # byte бөлшектеу
+    bytes_list = [bits[i:i+8] for i in range(0, len(bits), 8)]
+    message = ''
+    for b in bytes_list:
+        ch = int(b, 2)
+        if ch == 0:
+            break
+        message += chr(ch)
+    return message
+
+# қолдану:
+# hide_in_wav('cover.wav', 'hidden.wav', 'secret text here')
+# print(reveal_from_wav('hidden.wav'))
+Ескерту: MP3/OGG сияқты сығылған форматтарда LSB-ті тура қолданбаңыз — сығу деректі бұзады. WAV сияқты lossless форматын пайдаланыңыз.
+
+E. Бейне (MP4) — кадрларға бөлу және енгізу (OpenCV + LSB)
+ffmpeg немесе OpenCV көмегімен бейнені кадрларға бөліп, әр кадрға хабардың бөлігін енгізу; кейін қайта жинау.
+Қарапайым мысал: бірінші кадрға мәтін енгізу (ол LSB арқылы болса):
+import cv2
+from stegano import lsb
+
+cap = cv2.VideoCapture('input.mp4')
+ret, frame = cap.read()
+cv2.imwrite('first_frame.png', frame)
+cap.release()
+
+# first_frame.png-ке LSB енгізу:
+from stegano import lsb
+secret = lsb.hide('first_frame.png', 'Secret inside frame')
+secret.save('first_frame_hidden.png')
+
+# Егер бірнеше кадрға тарату қажет болса: әр кадрға әр түрлі бөлік енгізіп қайта ffmpeg-те біріктіруге болады.
+Ескерту: бейнені көбінесе кодтау/сығу қолданады — кадрға енгізілген LSB-ті сақтау үшін контейнерлар мен кодтау опцияларын мұқият таңдау керек (lossless кодтау қажет).
+
+Практикада мысалдар
+PNG LSB тесті: original.png → LSB енгізу арқылы hidden.png алғаннан кейін — hidden.png-ты JPEG етіп қайта сақтап, хабар жоғалатынын тексеру. Бұл LSB-нің сығуға осал екенін көрсетеді.
+JPEG DCT тесті (steghide): cover.jpg → secret.txt енгізу → қайта сығыңыз (тек қана шифрлы сақтамаңыз) → хабардың сақталуын салыстырыңыз.
+Аудио тасымалдау: cover.wav → WAV LSB енгізу → MP3-ке ауыстыру → WAV-ке қайта конвертацияланған файлдан хабардың жоғалуын көріңіз.
+
+Студенттерге жеке практикалық тапсырма
+PNG суретіне LSB арқылы 100 символдық мәтін енгізіңдер және шығарып алыңыз.
+Сол жасыруды JPEG форматында қайта сақтап, хабардың нешеуі сақталатынын байқаңыз.
+AES-пен шифрлап, алынған шифртексті PNG LSB-ге енгізіп, қайта шығарып дешифрлеңіз.
+steghide көмегімен JPEG-қа .txt файл енгізіп, парольсіз ашып көріңіз (парольді енгізіп шығара білу).
+WAV файлға LSB арқылы хабар енгізіп, MP3-ке конвертация жасаңыз және хабардың жоғалғанын тексеріңіз.
+Эхо-стегон әдісін дыбыста сынап көріңіз (Audacity-та echo қосып, спектр салыңыз).
+OpenStego-ны қолдана отырып PNG-қа хабар енгізіп, орнына қайта шығарып көріңіз.
+first_frame.png-ты LSB арқылы жасырып, бейненің қалған кадрларына ештеңе жасамаңыз; қайта жинап, қайта ойнағанда хабар қауіпсіз сақталады ма? Тест жүргізіңіз.
+zsteg арқылы бірнеше PNG файлын талдап, LSB белгіленгенін табыңыз.
+StegExpose-пен batch режимінде PNG-тарды тексеріп, күдікті файлдарды тізімдейсіз.
+GIF файлындағы кадрларға мәтінді енгізіп, кейін кадрларды қарап шығарыңыз.
+QR-кодқа AES-пен шифрланған URL/ключ сақтап, QR-дан оны алып дешифрлеңіз.
+Бір суретке екі түрлі хабар енгізіп, қайсысын бірінші шығару ережесімен жасалғанын анықтаңыз.
+LSB енгізілген суретті GIMP-те ашып, каналдарды қарап, айырмашылықты байқаңыз.
+PNG-тің палитрасын өзгерткенде (indexed colors) хабар сақтала ма — тексеріңіз.
+Бейнефайлдан бірнеше кадр алып, олардың әрқайсысына хабардың брошюралық бөлігін енгізіңіз; қайта жинаңыз және қайта шығарыңыз.
+Суретті әлеуметтік желіге жүктеп, жүктелген нұсқадан хабарды шығарып көріңіз (көбіне сығады).
+steghide-қа енгізілген құпия файлды strings немесе hexedit арқылы табуға бола ма — тексеріңіз.
+PNG метадеректеріне (tEXt chunk) хабар енгізіп, ExifTool арқылы оқып алыңыз.
+WAV-тың соңғы байттарына ASCII енгізіп, кейін оны hex арқылы тауып алыңыз.
+DCT-негізделген әдістер үшін JPEG-тың Q-матрицасын зерттеп, сигнал өзгерістері бар ма қарап шығыңыз.
+LSB таралуының гистограммасын есептеп, χ² тестілеуі арқылы стего бар ма анықтаңыз (Python).
+Бір хабарды бірнеше кіші бөлікте (sharding) бірнеше файлдарға бөліп енгізіңіз, кейін біріктіріп шығарыңыз.
+AES-кілтті QR-кодта сақтау сценарийін құрастырыңыз (секур түрде) және оны қайта оқу процесін жасаңыз.
+Бейне активті аралықта (streaming) кадрларды ұстап, солардан хабарды шығару процесін имитациялаңыз.
+Суретті 90° бұрып, хабар шығарыңыз — бұру әсері бар ма тексеріңіз.
+LSB-ге енгізілген хабарды кездейсоқ биттерді өзгерту арқылы бүлдіріп, қанша бит болса хабар оқылмайтынын зерттеңіз.
+Стеганографияның оң және теріс эффекттерін сипаттайтын 2 беттік есеп дайындаңыз.
+Стегоаны трансмедия (аудио→сурет→бейне) арқылы тасымалдаудың практикалық сценариін жасаңыз.
+Қорытынды лабораториялық есеп жазыңыз: қандай әдістер тұрақты, қандай жерде қолдануға болмайды, ұсыныстар.
+
